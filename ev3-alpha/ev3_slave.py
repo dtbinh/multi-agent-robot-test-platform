@@ -13,18 +13,18 @@ PORT = 8888 # Arbitrary non-privileged port
  
 try :
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    print 'Socket created'
+#    print 'Socket created'
 except socket.error, msg :
-    print 'Failed to create socket. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+#    print 'Failed to create socket. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
 
 try:
     s.bind((HOST, PORT))
 except socket.error , msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+#    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
      
-print 'Socket bind complete'
+#print 'Socket bind complete'
 
 ev3 = EV3DiffDrive(invert=False) # set invert=True if you want to change notion of left/right
 ev3.reset()
@@ -41,7 +41,14 @@ try:
 except:
     print "ERROR: unable to start thread ",e
 
+handleCmd = {
+    'fwd': ev3.forward,
+    'bck': ev3.backward,
+    'trn': ev3.turn,
+    'stp': ev3.brake,}
+
 while 1:
+
     # receive data from client (data, addr)
     data,addr = s.recvfrom(1024)
 
@@ -53,9 +60,9 @@ while 1:
     if cmd in handleCmd:
         reply = handleCmd[cmd](arg)
     else:
-        reply = default(arg)
+        reply = 'Unknown command'
     
     s.sendto(pickle.dumps(reply) , addr)
-    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + str(type(reply)) + ' :: ' + str(reply)
+#    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + str(type(reply)) + ' :: ' + str(reply)
 
 s.close()

@@ -39,24 +39,24 @@ class EV3DiffDrive():
         self.dl.start()
         self.dr.start()
 
-    def turn(self, speed_left=-200, speed_right=200):
+    def turn(self, mode=1, speed_left=-200, speed_right=200):
         self.dl.run_mode = 'forever'
         self.dl.regulation_mode = True
-        self.dl.pulses_per_second_sp = speed_left
+        self.dl.pulses_per_second_sp = speed_left*mode
 
         self.dr.run_mode = 'forever'
         self.dr.regulation_mode = True
-        self.dr.pulses_per_second_sp = speed_right
+        self.dr.pulses_per_second_sp = speed_right*mode
 
         self.dl.start()
         self.dr.start()
         
-    def brake(self):
+    def brake(self,mode=0):
         self.dl.stop()
         self.dr.stop()
         
     def encoder(self):
-        return (self.dl.position, self.dr.position)
+        return (time.time()*1000, self.dl.position, self.dr.position)
 
 
 if __name__ == '__main__':
