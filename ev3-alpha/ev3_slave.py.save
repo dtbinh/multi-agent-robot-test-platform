@@ -1,0 +1,65 @@
+#!/usr/bin/env python
+"""
+  This Python script uses Socket module available in Python to establish
+  communication with the Raspberry Pi and receive commands and send data.
+"""
+
+import socket
+import sys
+import pickle
+from joystick import DriveMotor
+
+HOST = ''   # Symbolic name meaning all available interfaces
+PORT = 8888 # Arbitrary non-privileged port
+ 
+# Datagram (udp) socket
+try :
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    print 'Socket created'
+except socket.error, msg :
+    print 'Failed to create socket. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    sys.exit()
+
+# Bind socket to local host and port
+try:
+    s.bind((HOST, PORT))
+except socket.error , msg:
+    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    sys.exit()
+     
+print 'Socket bind complete'
+
+def default(arg):
+    return 'Default actions'
+
+def drive(arg):
+    moves[arg]()
+    return ('drv',arg)
+
+handleCmd = {
+    'drv' : drive,
+    }
+
+a = DriveMotor()
+a.reset()
+moves = {'str':a.move_forward,'rev':a.move_backward,'lft':a.turn_left,'rgt':a.turn_right,'stp':a.brake}
+
+
+while 1:
+    # receive data from client (data, addr)
+    data,addr = s.recvfrom(1024)
+
+    if not data: 
+        break
+    
+    cmd,arg = pickle.loads(data)
+    
+    if cmd in handleCmd:
+        reply = handleCmd[cmd](arg)
+    else:
+        reply = default(arg)
+    
+    s.sendto(pickle.dumps(reply) , addr)
+    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + str(type(reply)) + ' :: ' + str(reply)
+
+s.close()
