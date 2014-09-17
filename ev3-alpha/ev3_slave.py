@@ -7,6 +7,7 @@
 import socket, sys, pickle
 import thread, time
 from ev3_diff_drive import EV3DiffDrive
+import time
 
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
@@ -29,15 +30,13 @@ except socket.error , msg:
 ev3 = EV3DiffDrive(invert=False) # set invert=True if you want to change notion of left/right
 ev3.reset()
 
-#moves = {'str':a.move_forward,'rev':a.move_backward,'lft':a.turn_left,'rgt':a.turn_right,'stp':a.brake}
-
-def log_encoder(delay):
-    while 1:
-        print ev3.encoder()
-        time.sleep(delay)
+logger = []
+def log_encoder():
+     while 1:
+         logger.append(ev3.encoder())
 
 try:
-    thread.start_new_thread( log_encoder, (0.01,))
+    thread.start_new_thread( log_encoder,())
 except:
     print "ERROR: unable to start thread ",e
 
@@ -46,8 +45,10 @@ handleCmd = {
     'bck': ev3.backward,
     'trn': ev3.turn,
     'stp': ev3.brake,}
-
-while 1:
+raw_input()
+s.close()
+print logger
+while 0:
 
     # receive data from client (data, addr)
     data,addr = s.recvfrom(1024)
@@ -66,3 +67,4 @@ while 1:
 #    print 'Message[' + addr[0] + ':' + str(addr[1]) + '] - ' + str(type(reply)) + ' :: ' + str(reply)
 
 s.close()
+

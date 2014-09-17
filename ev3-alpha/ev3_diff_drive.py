@@ -56,7 +56,7 @@ class EV3DiffDrive():
         self.dr.stop()
         
     def encoder(self):
-        return (time.time()*1000, self.dl.position, self.dr.position)
+        return (self.dl.position, self.dr.position)
 
 
 if __name__ == '__main__':
