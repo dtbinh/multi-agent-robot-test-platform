@@ -1,0 +1,11 @@
+Laptop:
+1. rosrun map_server map_server map.yaml
+2. rosrun tf static_transform_publisher -0.115 -0.075 -0.03 0 0 0 base_link map 10
+3. rosrun birds_eye_view mapper.py
+4. 
+
+RPi:
+1. rosrun ev3_teleop listener.py
+
+EV3:
+1. ./ev3diffdrive

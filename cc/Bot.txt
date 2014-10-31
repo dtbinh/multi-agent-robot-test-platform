@@ -1,0 +1,3 @@
+Width: 15cm
+Length: 23cm
+Height: 3cm (wheel center)
