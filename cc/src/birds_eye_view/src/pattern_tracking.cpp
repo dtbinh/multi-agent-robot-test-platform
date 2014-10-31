@@ -7,16 +7,12 @@ using namespace std;
 using namespace cv;
 using namespace cvb;
 
-#define FLOOR_HUE_LOWER 10
-#define FLOOR_HUE_UPPER 20
-#define SMILEY_HUE_LOWER 25
-#define SMILEY_HUE_UPPER 40
-#define BLUE_HUE_LOWER 90
-#define BLUE_HUE_UPPER 130
 #define RED_HUE_LOWER 0
-#define RED_HUE_UPPER 10
+#define RED_HUE_UPPER 20
 #define YELLOW_HUE_LOWER 25
 #define YELLOW_HUE_UPPER 50
+#define GREEN_HUE_LOWER 70
+#define GREEN_HUE_UPPER 100
 
 int x[10] = {0}, y[10] = {0};
 
