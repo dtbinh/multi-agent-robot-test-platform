@@ -6,9 +6,6 @@
 #include <stdlib.h>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
-#include <ros/ros.h>
-#include <geometry_msgs/Pose.h>
-
 using namespace cv;
 using namespace std;
 
@@ -53,7 +50,7 @@ void get_contours(int color, vector<Point> &C)
   Mat st = getStructuringElement(MORPH_CROSS, Size(3,3));
   morphologyEx(src_mask, src_mask, MORPH_OPEN, st);
 
-  // imshow( "Masks", src_mask );
+  imshow( "Masks", src_mask );
 
   int thresh = 100, ratio = 3;
   int max_thresh = 255;
@@ -89,7 +86,7 @@ void get_contours(int color, vector<Point> &C)
     // cout<<" Filtered Area "<< m.m00 << " for color "<< color << " at "<< i <<endl;
     // cout<<" (x,y): "<<x<<","<<y<<endl;
   }
-  // imshow( "Contours", drawing );
+  imshow( "Contours", drawing );
 }
 
 float dist(Point ptA, Point ptB)
@@ -100,22 +97,17 @@ float dist(Point ptA, Point ptB)
 int main( int argc, char** argv )
 {
 
-  ros::init(argc, argv, "hawk_eye");
-  ros::NodeHandle n;
-  ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("pose_estimate", 1000);
-
   /// Create capture
   VideoCapture cap(0);
   if(!cap.isOpened())
     return -  1;
 
   /// Create Window
-  // namedWindow( "Source", WINDOW_AUTOSIZE );
-  // namedWindow( "Masks", WINDOW_AUTOSIZE );
-  // namedWindow( "Contours", WINDOW_AUTOSIZE );
+  namedWindow( "Source", WINDOW_AUTOSIZE );
+  namedWindow( "Masks", WINDOW_AUTOSIZE );
+  namedWindow( "Contours", WINDOW_AUTOSIZE );
   int successful_frames = 0, skipped_frames = 0, total_frames=0;
-  ros::Rate loop_rate(10);
-  while(ros::ok())
+  while(1)
   {
     /// Load source image and convert it to gray
     cap >> src;
@@ -131,7 +123,7 @@ int main( int argc, char** argv )
     /// Extract robots from centroids
     // cout<< blue_cx.size()<<","<< blue_cy.size()<<","<< green_cx.size()<<","<< green_cy.size()<<","<< yellow_cx.size()<<","<< yellow_cy.size()<<endl;
     if(blue_c.size()==2&& green_c.size()==2&& yellow_c.size()==2){
-      // cout<<"Required contours found"<<endl;
+      cout<<"Required contours found"<<endl;
       boost::numeric::ublas::vector<double> g (2), b (2), y(2);
       for (int i = 0; i < green_c.size(); ++i)
       {
@@ -169,31 +161,30 @@ int main( int argc, char** argv )
           /// Robot 1
           ptA =  (4*b/5+g/5);
           ptB = ptA + (b-y);
-          ROS_INFO("Robot 1 at %f,%f and facing %f,%f", ptA(0), ptA(1), ptB(0), ptB(1));
+          cout<<"Robot 1 at "<<ptA<<" and facing "<<ptB<<endl;
           line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 1);
         }else{
           /// Robot 2
           ptA =  2*((b+y)/2)/3+g/3;
           ptB = ptA + (b-y);
-          ROS_INFO("Robot 1 at %f,%f and facing %f,%f", ptA(0), ptA(1), ptB(0), ptB(1));
+          cout<<"Robot 1 at "<<ptA<<" and facing "<< ptB<<endl;
           line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 1);
         }
         imshow( "Source", src);
       }
       successful_frames++;
     }else{
-      ROS_WARN("Not all contours were found, skipping to next frame");
+      cout<<"Not all contours were found, skipping to next frame"<<endl;
       skipped_frames++;
     }
 
     if(skipped_frames>successful_frames&&total_frames>1000)
     {
-      ROS_ERROR("Improper lighting. Exiting");
-      return -1;
+      cerr<<"Improper lighting. Exiting"<<endl;
+      break;
     }
 
-    ros::spinOnce();
-    loop_rate.sleep();
+    if(waitKey(10)>=0) break;
   }
   // waitKey(0);
   return(0);

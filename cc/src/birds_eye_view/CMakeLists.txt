@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS system)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -104,8 +104,7 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(talker src/talker.cpp)
-add_executable(main src/main.cpp)
+add_executable(contour src/contour.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -115,15 +114,9 @@ add_executable(main src/main.cpp)
 #include_directories(${cvBlob_INCLUDE_DIRS})
 ## Specify libraries to link a library or executable target against
 find_package(OpenCV REQUIRED)
-target_link_libraries(main ${OpenCV_LIBS})
-find_package(cvBlob REQUIRED)
-target_link_libraries(main ${cvBlob_LIBS})
+target_link_libraries(contour ${OpenCV_LIBS})
 
-target_link_libraries(talker
-  ${catkin_LIBRARIES}
-)
-
-target_link_libraries(main
+target_link_libraries(contour
   ${catkin_LIBRARIES}
 )
 
