@@ -9,8 +9,8 @@
 using namespace cv;
 using namespace std;
 
-#define RED_HUE_LOWER 160
-#define RED_HUE_UPPER 180
+#define RED_HUE_LOWER 0
+#define RED_HUE_UPPER 20
 #define YELLOW_HUE_LOWER 25
 #define YELLOW_HUE_UPPER 50
 #define BLUE_HUE_LOWER 95
@@ -45,8 +45,8 @@ int main( int argc, char** argv )
   switch(atoi(argv[1]))
   {
   case 1:
-    lower_limit = Scalar(RED_HUE_LOWER,0.10*255,0.45*255);
-    upper_limit = Scalar(RED_HUE_UPPER,0.40*255,0.65*255);
+    lower_limit = Scalar(RED_HUE_LOWER,255,255);
+    upper_limit = Scalar(RED_HUE_UPPER,255,255);
     break;
   case 2:
     lower_limit = Scalar(BLUE_HUE_LOWER,0.55*255,0.50*255);
@@ -92,7 +92,7 @@ int main( int argc, char** argv )
     vector<int> Cx, Cy;
 
     Mat st = getStructuringElement(MORPH_CROSS, Size(3,3));
-    morphologyEx(src_mask, src_mask, MORPH_OPEN, st);
+    // morphologyEx(src_mask, src_mask, MORPH_OPEN, st);
 
     imshow( "Masks", src_mask);
 

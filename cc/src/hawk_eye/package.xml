@@ -1,19 +1,21 @@
 <?xml version="1.0"?>
 <package>
-  <name>birds_eye_view</name>
-  <version>0.0.0</version>
-  <description>The birds_eye_view package</description>
+  <name>hawk_eye</name>
+  <version>0.1.0</version>
+  <description>The Hawk eye project uses an aerial camera to perform visual odometry using pre-determined
+coloured markers. Currently, the stationary camera provides an inertial global frame of reference with which
+each robot is tracked. </description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag --> 
   <!-- Example:  -->
   <!-- <maintainer email="jane.doe@example.com">Jane Doe</maintainer> -->
-  <maintainer email="manikandasriram@todo.todo">manikandasriram</maintainer>
+  <maintainer email="srmanikandasriram@gmail.com">S.R.Manikandasriram</maintainer>
 
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
   <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
-  <license>TODO</license>
+  <license>MIT</license>
 
 
   <!-- Url tags are optional, but mutiple are allowed, one per tag -->
@@ -44,10 +46,12 @@
   <build_depend>roscpp</build_depend>
   <build_depend>rospy</build_depend>
   <build_depend>std_msgs</build_depend>
+  <build_depend>tf</build_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>roscpp</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>std_msgs</run_depend>
+  <run_depend>tf</run_depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
