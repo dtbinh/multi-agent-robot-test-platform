@@ -7,6 +7,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <ros/ros.h>
+#include <geometry_msgs/PoseStamped.h>
 #include <geometry_msgs/Pose.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/tf.h>
@@ -15,17 +16,17 @@ using namespace cv;
 using namespace std;
 
 #define YELLOW_HUE_LOWER 25
-#define YELLOW_HUE_UPPER 50
-#define BLUE_HUE_LOWER 95
-#define BLUE_HUE_UPPER 125
+#define YELLOW_HUE_UPPER 70
+#define BLUE_HUE_LOWER 98
+#define BLUE_HUE_UPPER 110
 #define GREEN_HUE_LOWER 70
-#define GREEN_HUE_UPPER 95
+#define GREEN_HUE_UPPER 98
 #define BLUE 1
 #define YELLOW 2
 #define GREEN 3
 
 Mat src; Mat src_hsv;
-int area_thresh = 150;
+int area_thresh = 50;
 
 void get_contours(int color, vector<Point> &C)
 {
@@ -35,16 +36,16 @@ void get_contours(int color, vector<Point> &C)
   switch(color)
   {
   case BLUE:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.55*255,0.50*255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,0.65*255,0.65*255);
     upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
     break;
   case YELLOW:
-    lower_limit = Scalar(YELLOW_HUE_LOWER,50,50);
+    lower_limit = Scalar(YELLOW_HUE_LOWER,0.25*255,0.85*255);
     upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
     break;
   case GREEN:
     lower_limit = Scalar(GREEN_HUE_LOWER,0.70*255,0.45*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.75*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,255,255);
     break;
   }
   inRange(src_hsv,lower_limit,upper_limit,src_mask);
@@ -57,7 +58,7 @@ void get_contours(int color, vector<Point> &C)
 
   // imshow( "Masks", src_mask );
 
-  int thresh = 100, ratio = 3;
+  int thresh = 50, ratio = 3;
   int max_thresh = 255;
 
   /// Detect edges using canny
@@ -104,7 +105,10 @@ int main( int argc, char** argv )
 
   ros::init(argc, argv, "hawk_eye");
   ros::NodeHandle n;
-  ros::Publisher pose_pub = n.advertise<geometry_msgs::Pose>("pose_estimate", 1000);
+  ros::Publisher pose_pub[3];
+  pose_pub[0] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_0", 1000);
+  pose_pub[1] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_1", 1000);
+  pose_pub[2] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_2", 1000);
 
   /// Create capture
   VideoCapture cap(0);
@@ -132,7 +136,7 @@ int main( int argc, char** argv )
 
     /// Extract robots from centroids
     // cout<< blue_cx.size()<<","<< blue_cy.size()<<","<< green_cx.size()<<","<< green_cy.size()<<","<< yellow_cx.size()<<","<< yellow_cy.size()<<endl;
-    if(blue_c.size()==2&& green_c.size()==2&& yellow_c.size()==2){
+    if(blue_c.size()==3&& green_c.size()==3&& yellow_c.size()==3){
       // cout<<"Required contours found"<<endl;
       boost::numeric::ublas::vector<double> g (2), b (2), y(2);
       for (int i = 0; i < green_c.size(); ++i)
@@ -165,33 +169,43 @@ int main( int argc, char** argv )
         // line(src,blue_c[min_k],green_c[i],Scalar(0,0,0),2,8);
         
         double  ip = inner_prod(b-g, y-g), theta;
+        int robot_no = 0;
         cout<<ip<<endl;
         boost::numeric::ublas::vector<double> ptA (2), ptB(2), x_unit (2);
         x_unit(0) = 0;
         x_unit(1) = 1;
-        theta = acos(inner_prod((b-y)/sqrt(inner_prod(b-y,b-y)), x_unit));
-        if((b-y)(0)<0)
-          theta = -theta;
         if(ip>100){
           /// Robot 1
-          ptA =  (4*b/5+g/5);
-          ptB = ptA + (b-y);
-          ROS_INFO("Robot 1 at %f,%f and facing %f", ptA(1)*1.77/640, ptA(0)*1.77/640, theta*180/M_PI);
-          line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 1);
-        }else{
+          ptA = (8.595*b-4.785*y)/3.81;
+          ptB = g;
+          robot_no = 1;
+        }else if(ip>0){
           /// Robot 2
-          ptA =  2*((b+y)/2)/3+g/3;
-          ptB = ptA + (b-y);
-          ROS_INFO("Robot 2 at %f,%f and facing %f", ptA(1)*1.77/640, ptA(0)*1.77/640, theta*180/M_PI);
-          line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 1);
-          geometry_msgs::Pose pose;
-          pose.position.x = ptA(1)*1.77/640;
-          pose.position.y = ptA(0)*1.77/640;
-          geometry_msgs::Quaternion quat = tf::createQuaternionMsgFromYaw(theta);
-          pose.orientation = quat;
-          pose_pub.publish(pose);
+          ptA = (8.595*b+4.785*y)/13.38;
+          ptB = g;
+          robot_no = 2;
+        }else{
+          /// Robot 3
+          ptA = (b+y)/2;
+          ptB = g;
+          robot_no = 3;
         }
-        imshow( "Source", src);
+        theta = acos(inner_prod((ptB-ptA)/sqrt(inner_prod(ptB-ptA,ptB-ptA)), x_unit));
+        if((ptB-ptA)(0)<0)
+          theta = -theta;
+        ROS_INFO("Robot %d at %f,%f and facing %f", robot_no, ptA(1)*1.77/640, ptA(0)*1.77/640, theta*180/M_PI);
+        line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 2);
+        imshow("Source",src);
+        geometry_msgs::PoseStamped pose_stamped;
+        pose_stamped.header.stamp = ros::Time::now();
+        pose_stamped.header.frame_id="map";
+        geometry_msgs::Pose pose;
+        pose.position.x = ptA(1)*1.77/640;
+        pose.position.y = ptA(0)*1.77/640;
+        geometry_msgs::Quaternion quat = tf::createQuaternionMsgFromYaw(theta);
+        pose.orientation = quat;
+        pose_stamped.pose = pose;
+        pose_pub[robot_no-1].publish(pose_stamped);
       }
       successful_frames++;
     }else{

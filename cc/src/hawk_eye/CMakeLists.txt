@@ -106,6 +106,8 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(contour src/contour.cpp)
+add_executable(contour_check src/contour_check.cpp)
+add_executable(contour_standalone src/contour_standalone.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -116,8 +118,18 @@ add_executable(contour src/contour.cpp)
 ## Specify libraries to link a library or executable target against
 find_package(OpenCV REQUIRED)
 target_link_libraries(contour ${OpenCV_LIBS})
+target_link_libraries(contour_check ${OpenCV_LIBS})
+target_link_libraries(contour_standalone ${OpenCV_LIBS})
 
 target_link_libraries(contour
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(contour_check
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(contour_standalone
   ${catkin_LIBRARIES}
 )
 
