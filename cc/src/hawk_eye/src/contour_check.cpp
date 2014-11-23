@@ -13,13 +13,13 @@ using namespace std;
 #define RED_HUE_UPPER 20
 #define YELLOW_HUE_LOWER 25
 #define YELLOW_HUE_UPPER 70
-#define BLUE_HUE_LOWER 98
+#define BLUE_HUE_LOWER 100
 #define BLUE_HUE_UPPER 110
-#define GREEN_HUE_LOWER 70
-#define GREEN_HUE_UPPER 98
+#define GREEN_HUE_LOWER 85
+#define GREEN_HUE_UPPER 97
 
 Mat src; Mat src_hsv; Mat src_mask;
-int thresh = 50;
+int thresh = 100;
 int max_thresh = 255,area_thresh=50;
 RNG rng(12345);
 
@@ -52,7 +52,7 @@ int main( int argc, char** argv )
     upper_limit = Scalar(RED_HUE_UPPER,255,255);
     break;
   case 2:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.65*255,0.65*255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
     upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
     break;
   case 3:
@@ -60,8 +60,8 @@ int main( int argc, char** argv )
     upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
     break;
   case 4:
-    lower_limit = Scalar(GREEN_HUE_LOWER,0.70*255,0.45*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,255);
+    lower_limit = Scalar(GREEN_HUE_LOWER,0.90*255,0.45*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.95*255);
     break;
   }
   /// Create capture
@@ -94,6 +94,7 @@ int main( int argc, char** argv )
     vector<Vec4i> hierarchy;
     vector<int> Cx, Cy;
 
+    imshow("Contours", src_mask);
     Mat st = getStructuringElement(MORPH_CROSS, Size(3,3));
     morphologyEx(src_mask, src_mask, MORPH_OPEN, st);
 

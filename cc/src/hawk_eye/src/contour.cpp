@@ -19,14 +19,17 @@ using namespace std;
 #define YELLOW_HUE_UPPER 70
 #define BLUE_HUE_LOWER 98
 #define BLUE_HUE_UPPER 110
-#define GREEN_HUE_LOWER 70
-#define GREEN_HUE_UPPER 98
+#define GREEN_HUE_LOWER 85
+#define GREEN_HUE_UPPER 97
 #define BLUE 1
 #define YELLOW 2
 #define GREEN 3
 
 Mat src; Mat src_hsv;
 int area_thresh = 50;
+
+double theta_acc[3]={0,0,0};
+float alpha = 0.85;
 
 void get_contours(int color, vector<Point> &C)
 {
@@ -36,7 +39,7 @@ void get_contours(int color, vector<Point> &C)
   switch(color)
   {
   case BLUE:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.65*255,0.65*255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
     upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
     break;
   case YELLOW:
@@ -44,8 +47,8 @@ void get_contours(int color, vector<Point> &C)
     upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
     break;
   case GREEN:
-    lower_limit = Scalar(GREEN_HUE_LOWER,0.70*255,0.45*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,255);
+    lower_limit = Scalar(GREEN_HUE_LOWER,0.95*255,0.35*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.95*255);
     break;
   }
   inRange(src_hsv,lower_limit,upper_limit,src_mask);
@@ -136,7 +139,7 @@ int main( int argc, char** argv )
 
     /// Extract robots from centroids
     // cout<< blue_cx.size()<<","<< blue_cy.size()<<","<< green_cx.size()<<","<< green_cy.size()<<","<< yellow_cx.size()<<","<< yellow_cy.size()<<endl;
-    if(blue_c.size()==3&& green_c.size()==3&& yellow_c.size()==3){
+    if(blue_c.size()>0&& green_c.size()>0&& yellow_c.size()>0){
       // cout<<"Required contours found"<<endl;
       boost::numeric::ublas::vector<double> g (2), b (2), y(2);
       for (int i = 0; i < green_c.size(); ++i)
@@ -150,12 +153,15 @@ int main( int argc, char** argv )
             min_j = j;
             min_dist = dist(yellow_c[j],green_c[i]); 
           }
-            
         }
         y(0) = yellow_c[min_j].x;
         y(1) = yellow_c[min_j].y;
+        if(min_dist>30){
+          ROS_WARN("Nearby yellow not found. Skipping to next pattern.");
+          continue;
+        }
         min_dist = -1;
-        for (int k = 0; k < yellow_c.size(); ++k)
+        for (int k = 0; k < blue_c.size(); ++k)
         {
           if(dist(blue_c[k],green_c[i])<min_dist){
             min_dist = dist(blue_c[k],green_c[i]);
@@ -164,13 +170,17 @@ int main( int argc, char** argv )
         }
         b(0) = blue_c[min_k].x;
         b(1) = blue_c[min_k].y;
+        if(min_dist>30){
+          ROS_WARN("Nearby blue not found. Skipping to next pattern.");
+          continue;
+        }
         // line(src,green_c[i],yellow_c[min_j],Scalar(0,0,0),2,8);
         // line(src,yellow_c[min_j],blue_c[min_k],Scalar(0,0,0),2,8);
         // line(src,blue_c[min_k],green_c[i],Scalar(0,0,0),2,8);
         
         double  ip = inner_prod(b-g, y-g), theta;
         int robot_no = 0;
-        cout<<ip<<endl;
+        // cout<<ip<<endl;
         boost::numeric::ublas::vector<double> ptA (2), ptB(2), x_unit (2);
         x_unit(0) = 0;
         x_unit(1) = 1;
@@ -193,6 +203,8 @@ int main( int argc, char** argv )
         theta = acos(inner_prod((ptB-ptA)/sqrt(inner_prod(ptB-ptA,ptB-ptA)), x_unit));
         if((ptB-ptA)(0)<0)
           theta = -theta;
+        theta = alpha*theta + (1-alpha)*theta_acc[robot_no-1];
+        theta_acc[robot_no-1] = theta;
         ROS_INFO("Robot %d at %f,%f and facing %f", robot_no, ptA(1)*1.77/640, ptA(0)*1.77/640, theta*180/M_PI);
         line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 2);
         imshow("Source",src);
@@ -209,7 +221,7 @@ int main( int argc, char** argv )
       }
       successful_frames++;
     }else{
-      ROS_WARN("Not all contours were found, skipping to next frame");
+      ROS_WARN("Not all contours were found, skipping to next frame. Green: %d Yellow: %d Blue: %d", green_c.size(), yellow_c.size(), blue_c.size());
       skipped_frames++;
     }
 

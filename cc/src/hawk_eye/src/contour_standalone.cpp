@@ -15,8 +15,8 @@ using namespace std;
 #define YELLOW_HUE_UPPER 70
 #define BLUE_HUE_LOWER 98
 #define BLUE_HUE_UPPER 110
-#define GREEN_HUE_LOWER 70
-#define GREEN_HUE_UPPER 98
+#define GREEN_HUE_LOWER 85
+#define GREEN_HUE_UPPER 97
 #define BLUE 1
 #define YELLOW 2
 #define GREEN 3
@@ -32,7 +32,7 @@ void get_contours(int color, vector<Point> &C)
   switch(color)
   {
   case BLUE:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.65*255,0.65*255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
     upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
     break;
   case YELLOW:
@@ -40,8 +40,8 @@ void get_contours(int color, vector<Point> &C)
     upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
     break;
   case GREEN:
-    lower_limit = Scalar(GREEN_HUE_LOWER,0.70*255,0.45*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,255);
+    lower_limit = Scalar(GREEN_HUE_LOWER,0.95*255,0.35*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.95*255);
   }
   inRange(src_hsv,lower_limit,upper_limit,src_mask);
   
@@ -118,13 +118,13 @@ int main( int argc, char** argv )
     
     vector<Point> blue_c, green_c, yellow_c;
     get_contours(YELLOW, yellow_c);
-    get_contours(GREEN, green_c);
     get_contours(BLUE, blue_c);
+    get_contours(GREEN, green_c);
 
     /// Extract robots from centroids
     // cout<< blue_cx.size()<<","<< blue_cy.size()<<","<< green_cx.size()<<","<< green_cy.size()<<","<< yellow_cx.size()<<","<< yellow_cy.size()<<endl;
-    if(blue_c.size()==3&& green_c.size()==3&& yellow_c.size()==3){
-      cout<<"Required contours found"<<endl;
+    if(blue_c.size()>0&& green_c.size()>0&& yellow_c.size()>0){
+      // cout<<"Required contours found"<<endl;
       boost::numeric::ublas::vector<double> g (2), b (2), y(2);
       for (int i = 0; i < green_c.size(); ++i)
       {
@@ -141,8 +141,13 @@ int main( int argc, char** argv )
         }
         y(0) = yellow_c[min_j].x;
         y(1) = yellow_c[min_j].y;
+        if(min_dist>30){
+          cout<<"Nearby yellow not found. Skipping to next pattern."<<endl;
+          continue;
+        }
+        cout<<"Min distances :"<<min_dist;
         min_dist = -1;
-        for (int k = 0; k < yellow_c.size(); ++k)
+        for (int k = 0; k < blue_c.size(); ++k)
         {
           if(dist(blue_c[k],green_c[i])<min_dist){
             min_dist = dist(blue_c[k],green_c[i]);
@@ -151,6 +156,11 @@ int main( int argc, char** argv )
         }
         b(0) = blue_c[min_k].x;
         b(1) = blue_c[min_k].y;
+        if(min_dist>30){
+          cout<<"Nearby blue not found. Skipping to next pattern."<<endl;
+          continue;
+        }
+        cout<<", "<<min_dist<<endl;
         // line(src,green_c[i],yellow_c[min_j],Scalar(0,0,0),2,8);
         // line(src,yellow_c[min_j],blue_c[min_k],Scalar(0,0,0),2,8);
         // line(src,blue_c[min_k],green_c[i],Scalar(0,0,0),2,8);
