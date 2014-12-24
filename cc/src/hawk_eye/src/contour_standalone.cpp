@@ -8,21 +8,43 @@
 #include <boost/numeric/ublas/io.hpp>
 #define _USE_MATH_DEFINES
 #include <math.h>
+
+
+
+
 using namespace cv;
 using namespace std;
 
-#define YELLOW_HUE_LOWER 25
-#define YELLOW_HUE_UPPER 70
-#define BLUE_HUE_LOWER 98
-#define BLUE_HUE_UPPER 110
-#define GREEN_HUE_LOWER 85
-#define GREEN_HUE_UPPER 97
+const int BLUE_HUE_LOWER   = 98;
+const int BLUE_HUE_UPPER   = 120;
+const int YELLOW_HUE_LOWER = 25;
+const int YELLOW_HUE_UPPER = 70;
+const int GREEN_HUE_LOWER  = 85;
+const int GREEN_HUE_UPPER  = 97;
+
+const float BLUE_SAT_LOWER   = 0.80;
+const float BLUE_SAT_UPPER   = 1.00;
+const float YELLOW_SAT_LOWER = 0.25;
+const float YELLOW_SAT_UPPER = 1.00;
+const float GREEN_SAT_LOWER  = 0.90;
+const float GREEN_SAT_UPPER  = 1.00;
+
+const float BLUE_VALUE_LOWER   = 0.70;
+const float BLUE_VALUE_UPPER   = 1.00;
+const float YELLOW_VALUE_LOWER = 0.75;
+const float YELLOW_VALUE_UPPER = 1.00;
+const float GREEN_VALUE_LOWER  = 0.45;
+const float GREEN_VALUE_UPPER  = 0.95;
+
 #define BLUE 1
 #define YELLOW 2
 #define GREEN 3
 
 Mat src; Mat src_hsv;
 int area_thresh = 50;
+
+double theta_acc[3]={0,0,0};
+float alpha = 1;
 
 void get_contours(int color, vector<Point> &C)
 {
@@ -32,16 +54,17 @@ void get_contours(int color, vector<Point> &C)
   switch(color)
   {
   case BLUE:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
-    upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,BLUE_SAT_LOWER*255,BLUE_VALUE_LOWER*255);
+    upper_limit = Scalar(BLUE_HUE_UPPER,BLUE_SAT_UPPER*255,BLUE_VALUE_UPPER*255);
     break;
   case YELLOW:
-    lower_limit = Scalar(YELLOW_HUE_LOWER,0.25*255,0.85*255);
-    upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
+    lower_limit = Scalar(YELLOW_HUE_LOWER,YELLOW_SAT_LOWER*255,YELLOW_VALUE_LOWER*255);
+    upper_limit = Scalar(YELLOW_HUE_UPPER,YELLOW_SAT_UPPER*255,YELLOW_VALUE_UPPER*255);
     break;
   case GREEN:
-    lower_limit = Scalar(GREEN_HUE_LOWER,0.95*255,0.35*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.95*255);
+    lower_limit = Scalar(GREEN_HUE_LOWER,GREEN_SAT_LOWER*255,GREEN_VALUE_LOWER*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,GREEN_SAT_UPPER*255,GREEN_VALUE_UPPER*255);
+    break;
   }
   inRange(src_hsv,lower_limit,upper_limit,src_mask);
   
@@ -53,23 +76,36 @@ void get_contours(int color, vector<Point> &C)
 
   imshow( "Masks", src_mask );
 
-  int thresh = 50, ratio = 3;
+  int thresh = 75, ratio = 3;
   int max_thresh = 255;
 
   /// Detect edges using canny
+  blur( src_mask, src_mask, Size(3,3) );
   Canny( src_mask, canny_output, thresh, thresh*ratio, 3 );
+  switch(color)
+  {
+    case BLUE:
+      imshow("Contours_b", canny_output);
+      break;
+    case YELLOW:
+      imshow("Contours_y", canny_output);
+      break;
+    case GREEN:
+      imshow("Contours_g", canny_output);
+      break;
+  }
 
   /// Find contours
-  findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
+  findContours( canny_output, contours, hierarchy, CV_RETR_EXTERNAL, CHAIN_APPROX_NONE, Point(0, 0) );
   vector<int> filtered_contours_indices;
   // cout<<"Number of contours found: "<< contours.size() <<endl;
   double area;
   Mat drawing = Mat::zeros( src.size(), CV_8UC3 );
   for( size_t i = 0; i< contours.size(); i++ )
   {
-    area = contourArea(contours[(int)i],true);
+    area = contourArea(contours[(int)i]);
     if(area<area_thresh){
-      // cout<<area<<" ";
+      cout<<area<<" ";
       continue;
     }
       
@@ -101,12 +137,14 @@ int main( int argc, char** argv )
   /// Create capture
   VideoCapture cap(0);
   if(!cap.isOpened())
-    return -  1;
+    return -1;
 
   /// Create Window
   namedWindow( "Source", WINDOW_AUTOSIZE );
   namedWindow( "Masks", WINDOW_AUTOSIZE );
-  // namedWindow( "Contours", WINDOW_AUTOSIZE );
+  namedWindow( "Contours_y", WINDOW_AUTOSIZE );
+  namedWindow( "Contours_g", WINDOW_AUTOSIZE );
+  namedWindow( "Contours_b", WINDOW_AUTOSIZE );
   int successful_frames = 0, skipped_frames = 0, total_frames=0;
   while(1)
   {
@@ -117,10 +155,11 @@ int main( int argc, char** argv )
     cvtColor(src, src_hsv, CV_BGR2HSV); 
     
     vector<Point> blue_c, green_c, yellow_c;
+    
+    
     get_contours(YELLOW, yellow_c);
-    get_contours(BLUE, blue_c);
     get_contours(GREEN, green_c);
-
+    get_contours(BLUE, blue_c);
     /// Extract robots from centroids
     // cout<< blue_cx.size()<<","<< blue_cy.size()<<","<< green_cx.size()<<","<< green_cy.size()<<","<< yellow_cx.size()<<","<< yellow_cy.size()<<endl;
     if(blue_c.size()>0&& green_c.size()>0&& yellow_c.size()>0){
@@ -165,7 +204,8 @@ int main( int argc, char** argv )
         // line(src,yellow_c[min_j],blue_c[min_k],Scalar(0,0,0),2,8);
         // line(src,blue_c[min_k],green_c[i],Scalar(0,0,0),2,8);
         
-        double  ip = inner_prod(b-g, y-g), theta = 0; 
+        double  ip = inner_prod(b-g, y-g), theta = 0;
+        int robot_no = 0; 
         cout<<ip<<endl;
         boost::numeric::ublas::vector<double> ptA (2), ptB(2), x_unit(2);
         x_unit(0) = 0;
@@ -177,22 +217,27 @@ int main( int argc, char** argv )
           /// Robot 1
           ptA = (8.595*b-4.785*y)/3.81;
           ptB = g;
+          robot_no = 1;
           cout<<"Robot 1 at ";
         }else if(ip>0){
           /// Robot 2
           ptA = (8.595*b+4.785*y)/13.38;
           ptB = g;
+          robot_no = 2;
           cout<<"Robot 2 at ";
         }else{
           /// Robot 3
           ptA = (b+y)/2;
           ptB = g;
+          robot_no = 3;
           cout<<"Robot 3 at ";
           
         }
         theta = acos(inner_prod((ptB-ptA)/sqrt(inner_prod(ptB-ptA,ptB-ptA)), x_unit));
         if((ptB-ptA)(0)<0)
           theta = -theta;
+        theta = alpha*theta + (1-alpha)*theta_acc[robot_no-1];
+        theta_acc[robot_no-1] = theta;
         cout<<ptA(1)*1.77/640<<","<<ptA(0)*1.77/640<<" and facing "<< theta*180/M_PI<<endl;
         line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 2);
         imshow("Source",src);

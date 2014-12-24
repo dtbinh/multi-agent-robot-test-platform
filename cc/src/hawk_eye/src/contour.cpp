@@ -15,12 +15,27 @@
 using namespace cv;
 using namespace std;
 
-#define YELLOW_HUE_LOWER 25
-#define YELLOW_HUE_UPPER 70
-#define BLUE_HUE_LOWER 98
-#define BLUE_HUE_UPPER 110
-#define GREEN_HUE_LOWER 85
-#define GREEN_HUE_UPPER 97
+int BLUE_HUE_LOWER   = 98;
+int BLUE_HUE_UPPER   = 120;
+int YELLOW_HUE_LOWER = 25;
+int YELLOW_HUE_UPPER = 70;
+int GREEN_HUE_LOWER  = 85;
+int GREEN_HUE_UPPER  = 97;
+
+float BLUE_SAT_LOWER   = 0.80;
+float BLUE_SAT_UPPER   = 1.00;
+float YELLOW_SAT_LOWER = 0.25;
+float YELLOW_SAT_UPPER = 1.00;
+float GREEN_SAT_LOWER  = 0.95;
+float GREEN_SAT_UPPER  = 1.00;
+
+float BLUE_VALUE_LOWER   = 0.70;
+float BLUE_VALUE_UPPER   = 1.00;
+float YELLOW_VALUE_LOWER = 0.75;
+float YELLOW_VALUE_UPPER = 1.00;
+float GREEN_VALUE_LOWER  = 0.45;
+float GREEN_VALUE_UPPER  = 0.95;
+
 #define BLUE 1
 #define YELLOW 2
 #define GREEN 3
@@ -29,7 +44,7 @@ Mat src; Mat src_hsv;
 int area_thresh = 50;
 
 double theta_acc[3]={0,0,0};
-float alpha = 0.85;
+float alpha = 1;
 
 void get_contours(int color, vector<Point> &C)
 {
@@ -39,16 +54,16 @@ void get_contours(int color, vector<Point> &C)
   switch(color)
   {
   case BLUE:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
-    upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,BLUE_SAT_LOWER*255,BLUE_VALUE_LOWER*255);
+    upper_limit = Scalar(BLUE_HUE_UPPER,BLUE_SAT_UPPER*255,BLUE_VALUE_UPPER*255);
     break;
   case YELLOW:
-    lower_limit = Scalar(YELLOW_HUE_LOWER,0.25*255,0.85*255);
-    upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
+    lower_limit = Scalar(YELLOW_HUE_LOWER,YELLOW_SAT_LOWER*255,YELLOW_VALUE_LOWER*255);
+    upper_limit = Scalar(YELLOW_HUE_UPPER,YELLOW_SAT_UPPER*255,YELLOW_VALUE_UPPER*255);
     break;
   case GREEN:
-    lower_limit = Scalar(GREEN_HUE_LOWER,0.95*255,0.35*255);
-    upper_limit = Scalar(GREEN_HUE_UPPER,255,0.95*255);
+    lower_limit = Scalar(GREEN_HUE_LOWER,GREEN_SAT_LOWER*255,GREEN_VALUE_LOWER*255);
+    upper_limit = Scalar(GREEN_HUE_UPPER,GREEN_SAT_UPPER*255,GREEN_VALUE_UPPER*255);
     break;
   }
   inRange(src_hsv,lower_limit,upper_limit,src_mask);
@@ -65,17 +80,18 @@ void get_contours(int color, vector<Point> &C)
   int max_thresh = 255;
 
   /// Detect edges using canny
+  blur( src_mask, src_mask, Size(3,3) );
   Canny( src_mask, canny_output, thresh, thresh*ratio, 3 );
-
+  //imshow("Contours", canny_output);
   /// Find contours
-  findContours( canny_output, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0) );
+  findContours( canny_output, contours, hierarchy, CV_RETR_EXTERNAL, CHAIN_APPROX_NONE, Point(0, 0) );
   vector<int> filtered_contours_indices;
   // cout<<"Number of contours found: "<< contours.size() <<endl;
   double area;
   Mat drawing = Mat::zeros( src.size(), CV_8UC3 );
   for( size_t i = 0; i< contours.size(); i++ )
   {
-    area = contourArea(contours[(int)i],true);
+    area = contourArea(contours[(int)i],false);
     if(area<area_thresh){
       // cout<<area<<" ";
       continue;
@@ -113,17 +129,81 @@ int main( int argc, char** argv )
   pose_pub[1] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_1", 1000);
   pose_pub[2] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_2", 1000);
 
+  if(! ros::param::get("/hsv_thresholds/blue_hue_lower", BLUE_HUE_LOWER)){
+    BLUE_HUE_LOWER = 98;
+  }
+  if(! ros::param::get("/hsv_thresholds/blue_hue_upper", BLUE_HUE_UPPER)){
+    BLUE_HUE_UPPER   = 120;    
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_hue_lower",YELLOW_HUE_LOWER)){
+    YELLOW_HUE_LOWER = 25;
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_hue_upper",YELLOW_HUE_UPPER)){
+    YELLOW_HUE_UPPER = 70;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_hue_lower",GREEN_HUE_LOWER)){
+    GREEN_HUE_LOWER  = 85;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_hue_upper",GREEN_HUE_UPPER)){
+    GREEN_HUE_UPPER  = 97;
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_sat_lower",YELLOW_SAT_LOWER)){
+    YELLOW_SAT_LOWER  = 0.25;
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_sat_upper",YELLOW_SAT_UPPER)){
+    YELLOW_SAT_UPPER  = 1.00;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_sat_lower",GREEN_SAT_LOWER)){
+    GREEN_SAT_LOWER  = 0.90;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_sat_upper",GREEN_SAT_UPPER)){
+    GREEN_SAT_UPPER  = 1.00;
+  }
+  if(! ros::param::get("/hsv_thresholds/blue_sat_lower",BLUE_SAT_LOWER)){
+    BLUE_SAT_LOWER  = 0.80;
+  }
+  if(! ros::param::get("/hsv_thresholds/blue_sat_upper",BLUE_SAT_UPPER)){
+    BLUE_SAT_UPPER  = 1.00;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_value_lower",GREEN_VALUE_LOWER)){
+    GREEN_VALUE_LOWER  = 0.45;
+  }
+  if(! ros::param::get("/hsv_thresholds/green_value_upper",GREEN_VALUE_UPPER)){
+    GREEN_VALUE_UPPER  = 0.95;
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_value_lower",YELLOW_VALUE_LOWER)){
+    YELLOW_VALUE_LOWER  = 0.75;
+  }
+  if(! ros::param::get("/hsv_thresholds/yellow_value_upper",YELLOW_VALUE_UPPER)){
+    YELLOW_VALUE_UPPER  = 1.00;
+  }
+  if(! ros::param::get("/hsv_thresholds/blue_value_lower",BLUE_VALUE_LOWER)){
+    BLUE_VALUE_LOWER  = 0.70;
+  }
+  if(! ros::param::get("/hsv_thresholds/blue_value_upper",BLUE_VALUE_UPPER)){
+    BLUE_VALUE_UPPER  = 1.00;
+  }
+  cout<<GREEN_HUE_LOWER<<","<<GREEN_HUE_UPPER<<endl;
+  cout<<BLUE_HUE_LOWER<<","<<BLUE_HUE_UPPER<<endl;
+  cout<<YELLOW_HUE_LOWER<<","<<YELLOW_HUE_UPPER<<endl;
+  cout<<GREEN_SAT_LOWER<<","<<GREEN_SAT_UPPER<<endl;
+  cout<<BLUE_SAT_LOWER<<","<<BLUE_SAT_UPPER<<endl;
+  cout<<YELLOW_SAT_LOWER<<","<<YELLOW_SAT_UPPER<<endl;
+  cout<<GREEN_VALUE_LOWER<<","<<GREEN_VALUE_UPPER<<endl;
+  cout<<BLUE_VALUE_LOWER<<","<<BLUE_VALUE_UPPER<<endl;
+  cout<<YELLOW_VALUE_LOWER<<","<<YELLOW_VALUE_UPPER<<endl;
+
   /// Create capture
   VideoCapture cap(0);
   if(!cap.isOpened())
-    return -  1;
+    return -1;
 
   /// Create Window
   // namedWindow( "Source", WINDOW_AUTOSIZE );
   // namedWindow( "Masks", WINDOW_AUTOSIZE );
   // namedWindow( "Contours", WINDOW_AUTOSIZE );
   int successful_frames = 0, skipped_frames = 0, total_frames=0;
-  ros::Rate loop_rate(10);
+  ros::Rate loop_rate(1);
   while(ros::ok())
   {
     /// Load source image and convert it to gray
@@ -177,26 +257,26 @@ int main( int argc, char** argv )
         // line(src,green_c[i],yellow_c[min_j],Scalar(0,0,0),2,8);
         // line(src,yellow_c[min_j],blue_c[min_k],Scalar(0,0,0),2,8);
         // line(src,blue_c[min_k],green_c[i],Scalar(0,0,0),2,8);
-        
-        double  ip = inner_prod(b-g, y-g), theta;
+        double A = norm_2(b-y), B = norm_2(y-g), C = norm_2(g-b);
+        double  ip = acos((B*B+C*C-A*A)/(2*B*C)), theta;
         int robot_no = 0;
         // cout<<ip<<endl;
         boost::numeric::ublas::vector<double> ptA (2), ptB(2), x_unit (2);
         x_unit(0) = 0;
         x_unit(1) = 1;
-        if(ip>100){
+        if(ip>1.65){
           /// Robot 1
-          ptA = (8.595*b-4.785*y)/3.81;
+          ptA = (b+y)/2;
           ptB = g;
           robot_no = 1;
-        }else if(ip>0){
+        }else if(ip>1.0){
           /// Robot 2
           ptA = (8.595*b+4.785*y)/13.38;
           ptB = g;
           robot_no = 2;
         }else{
           /// Robot 3
-          ptA = (b+y)/2;
+          ptA = (8.595*b-4.785*y)/3.81;
           ptB = g;
           robot_no = 3;
         }
@@ -205,7 +285,8 @@ int main( int argc, char** argv )
           theta = -theta;
         theta = alpha*theta + (1-alpha)*theta_acc[robot_no-1];
         theta_acc[robot_no-1] = theta;
-        ROS_INFO("Robot %d at %f,%f and facing %f", robot_no, ptA(1)*1.77/640, ptA(0)*1.77/640, theta*180/M_PI);
+        // conic_projection(&ptA);
+        ROS_INFO("%f Robot %d at %f,%f and facing %f", ip, robot_no, ptA(1), ptA(0), theta*180/M_PI);
         line(src,Point(ptA(0),ptA(1)), Point(ptB(0),ptB(1)), Scalar(255,255,255), 2);
         imshow("Source",src);
         geometry_msgs::PoseStamped pose_stamped;
@@ -221,7 +302,7 @@ int main( int argc, char** argv )
       }
       successful_frames++;
     }else{
-      ROS_WARN("Not all contours were found, skipping to next frame. Green: %d Yellow: %d Blue: %d", green_c.size(), yellow_c.size(), blue_c.size());
+      ROS_WARN("Not all contours were found, skipping to next frame. Green: %d Yellow: %d Blue: %d", (int)green_c.size(), (int)yellow_c.size(), (int)blue_c.size());
       skipped_frames++;
     }
 

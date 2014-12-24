@@ -1,0 +1,9 @@
+hsv_thresholds: {blue_hue_lower: 98, blue_hue_upper: 120,
+                 green_hue_lower: 85, green_hue_upper: 97,
+                 yellow_hue_lower: 25, yellow_hue_upper: 70,
+                 blue_sat_lower: 0.50, blue_sat_upper: 1.0,
+                 green_sat_lower: 0.90, green_sat_upper: 1.0,
+                 yellow_sat_lower: 0.25, yellow_sat_upper: 1.0,
+                 blue_value_lower: 0.80, blue_value_upper: 1.0,
+                 green_value_lower: 0.45, green_value_upper: 0.95,
+                 yellow_value_lower: 0.75, yellow_value_upper: 1.0}

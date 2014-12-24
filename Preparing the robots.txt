@@ -1,3 +1,6 @@
+
+
+
 Each agent will have an on-board Single Board Computer like Raspberry Pi. This processor will execute the higher level commands by communicating with the robot motion controllers. In this case, a Raspberry Pi Model B+ is used which is powered from the Mindstorms EV3 using USB cable. The communication between RPi B+ and EV3 is through USB cable as well and is implemented using simple Python Socket module.
 
 ROS Hydro w/ Raspbian:

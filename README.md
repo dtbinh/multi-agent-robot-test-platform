@@ -1,7 +1,7 @@
-Multi-agent Robot Test Platform
+LEGO Mindstorms Testing Platform
 ===============================
 
-A testing platform for Multi-agent robotics that is built upon the LEGO Mindstorms kits.
+A testing platform for Differential drive robots that is built upon the LEGO Mindstorms kits.
 The software is using the open source ROS framework. The roscore runs on the Central PC and 
 all the robots have nodes running on them which allows for coordination among the robots. 
 An aerial camera is connected to the central PC which locates and tracks all the robots using

@@ -13,8 +13,8 @@ using namespace std;
 #define RED_HUE_UPPER 20
 #define YELLOW_HUE_LOWER 25
 #define YELLOW_HUE_UPPER 70
-#define BLUE_HUE_LOWER 100
-#define BLUE_HUE_UPPER 110
+#define BLUE_HUE_LOWER 98
+#define BLUE_HUE_UPPER 120
 #define GREEN_HUE_LOWER 85
 #define GREEN_HUE_UPPER 97
 
@@ -52,11 +52,11 @@ int main( int argc, char** argv )
     upper_limit = Scalar(RED_HUE_UPPER,255,255);
     break;
   case 2:
-    lower_limit = Scalar(BLUE_HUE_LOWER,0.80*255,0.70*255);
+    lower_limit = Scalar(BLUE_HUE_LOWER,0.5*255,0.80*255);
     upper_limit = Scalar(BLUE_HUE_UPPER,255,255);
     break;
   case 3:
-    lower_limit = Scalar(YELLOW_HUE_LOWER,0.25*255,0.85*255);
+    lower_limit = Scalar(YELLOW_HUE_LOWER,0.25*255,0.75*255);
     upper_limit = Scalar(YELLOW_HUE_UPPER,255,255);
     break;
   case 4:
