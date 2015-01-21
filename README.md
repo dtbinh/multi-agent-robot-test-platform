@@ -24,6 +24,7 @@ Height: 3cm (wheel center)
 Using the testbed:
 ==================
 On the central PC:
+
 1. roscore
 2. rosrun hawk_eye contour
 3. roslaunch rosserial_server socket_node.launch
