@@ -24,21 +24,21 @@ Height: 3cm (wheel center)
 Using the testbed:
 ==================
 On the central PC:
-0. roscore
-1. rosrun hawk_eye contour
-2. roslaunch rosserial_server socket_node.launch
-3. rosrun ev3_navigation wanderer.py => to be replaced with your algorithm of interest
+1. roscore
+2. rosrun hawk_eye contour
+3. roslaunch rosserial_server socket_node.launch
+4. rosrun ev3_navigation wanderer.py => to be replaced with your algorithm of interest
 
-4. rosrun rviz rviz => Required if you want to visualize the data
+5. rosrun rviz rviz => Required if you want to visualize the data
 
 On each EV3:
 ============
-1. ./diffdrive_ultrasonic <IP-address of central PC> <left_motor_port> <right_motor_port> <ultrasonic_sensor_port>
+1. ./diffdrive_ultrasonic \<IP-address of central PC\> \<left_motor_port\> \<right_motor_port\> \<ultrasonic_sensor_port\>
 
 Other tools:
 ============
 - contour_standalone, present inside hawk_eye package, is useful in visually checking the various stages of processing. Helps in debugging and to ensure that each of the strips are getting detected properly.
-- contour_check <color_id> is useful in calibrating the ranges for the different colours. The colour_ids are 1,2,3,4 corresponding to Red, Blue, Yellow and Green.
+- contour_check \<color_id\> is useful in calibrating the ranges for the different colours. The colour_ids are 1,2,3,4 corresponding to Red, Blue, Yellow and Green.
 - roslaunch ev3_navigation move_base.launch => A very crude implementation which will have to be improved.
 - ev3_navigation/mapper.py => an example implementation for tracking the robot movement
 
