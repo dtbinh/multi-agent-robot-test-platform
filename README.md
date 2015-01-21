@@ -17,13 +17,15 @@ ROS Packages used:
 Bot Description:
 ================
 Each robot is a LEGO Mindstorms EV3 standard differential drive chassis with an Ultrasonic sensor mounted in front.
-Width: 15cm
-Length: 23cm
-Height: 3cm (wheel center)
+
+* Width: 15cm
+* Length: 23cm
+* Height: 3cm (wheel center)
 
 Using the testbed:
 ==================
 On the central PC:
+------------------
 
 1. roscore
 2. rosrun hawk_eye contour
@@ -33,7 +35,8 @@ On the central PC:
 5. rosrun rviz rviz => Required if you want to visualize the data
 
 On each EV3:
-============
+------------
+
 1. ./diffdrive_ultrasonic \<IP-address of central PC\> \<left_motor_port\> \<right_motor_port\> \<ultrasonic_sensor_port\>
 
 Other tools:
