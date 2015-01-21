@@ -125,9 +125,9 @@ int main( int argc, char** argv )
   ros::init(argc, argv, "hawk_eye");
   ros::NodeHandle n;
   ros::Publisher pose_pub[3];
-  pose_pub[0] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_0", 1000);
-  pose_pub[1] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_1", 1000);
-  pose_pub[2] = n.advertise<geometry_msgs::PoseStamped>("pose_estimate_2", 1000);
+  pose_pub[0] = n.advertise<geometry_msgs::PoseStamped>("/robot1/pose_estimate", 1000);
+  pose_pub[1] = n.advertise<geometry_msgs::PoseStamped>("/robot2/pose_estimate", 1000);
+  pose_pub[2] = n.advertise<geometry_msgs::PoseStamped>("/robot3/pose_estimate", 1000);
 
   if(! ros::param::get("/hsv_thresholds/blue_hue_lower", BLUE_HUE_LOWER)){
     BLUE_HUE_LOWER = 98;

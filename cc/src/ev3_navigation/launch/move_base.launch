@@ -2,10 +2,10 @@
     ROS navigation stack with velocity smoother and safety (reactive) controller
 -->
 <launch>
-  <arg name="odom_topic" default="/odom_rpi" />
+  <arg name="odom_topic" default="/robot1/odom" />
   
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <remap from="cmd_vel" to="robot2/cmd_vel" />
+    <remap from="cmd_vel" to="/robot1/cmd_vel" />
     <rosparam file="$(find ev3_navigation)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
     <rosparam file="$(find ev3_navigation)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
     <rosparam file="$(find ev3_navigation)/param/local_costmap_params.yaml" command="load" />
